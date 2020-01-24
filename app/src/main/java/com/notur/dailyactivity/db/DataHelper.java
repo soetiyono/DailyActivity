@@ -11,7 +11,7 @@ import com.notur.dailyactivity.model.Data;
 import java.util.ArrayList;
 
 import static com.notur.dailyactivity.db.DbContract.TABLE_DATA;
-import static com.notur.dailyactivity.db.DbContract.Table.DESC;
+import static com.notur.dailyactivity.db.DbContract.Table.KETERANGAN;
 import static com.notur.dailyactivity.db.DbContract.Table.ID;
 import static com.notur.dailyactivity.db.DbContract.Table.KATAGORI;
 import static com.notur.dailyactivity.db.DbContract.Table.TGL;
@@ -36,7 +36,7 @@ public class DataHelper {
     }
 
     public ArrayList<Data> getData(){
-        Cursor cursor = db.query(TABLE_DATA, null, null, null, null, null, ID + " DESC", null);
+        Cursor cursor = db.query(TABLE_DATA, null, null, null, null, null, ID + " KETERANGAN", null);
         cursor.moveToFirst();
         ArrayList<Data>list = new ArrayList<>();
         Data data;
@@ -44,7 +44,7 @@ public class DataHelper {
             do {
                 data = new Data();
                 data.setKatagori(cursor.getString(cursor.getColumnIndexOrThrow(KATAGORI)));
-                data.setDesc(cursor.getString(cursor.getColumnIndexOrThrow(DESC)));
+                data.setDesc(cursor.getString(cursor.getColumnIndexOrThrow(KETERANGAN)));
                 data.setTgl(cursor.getString(cursor.getColumnIndexOrThrow(TGL)));
                 list.add(data);
                 cursor.moveToNext();
@@ -60,7 +60,7 @@ public class DataHelper {
 
         ContentValues contentValues = new ContentValues();
         contentValues.put(KATAGORI, data.getKatagori());
-        contentValues.put(DESC, data.getDesc());
+        contentValues.put(KETERANGAN, data.getDesc());
         contentValues.put(TGL, data.getTgl());
 
         db.insert(TABLE_DATA,null,contentValues);

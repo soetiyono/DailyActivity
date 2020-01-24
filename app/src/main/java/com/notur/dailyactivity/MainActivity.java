@@ -1,11 +1,15 @@
 package com.notur.dailyactivity;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.notur.dailyactivity.db.DbHelper;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -21,6 +25,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
     AlertDialog.Builder dialog;
     LayoutInflater inflater;
     View dialogView;
-    EditText txtKtg, txt_usia, txtDesc, txt_status;
+    EditText txtKtg, txtDesc;
     TextView txt_hasil;
     String ktg, dsc;
     FloatingActionButton fab,fab2;
@@ -38,6 +43,8 @@ public class MainActivity extends AppCompatActivity {
     List<String> data = new ArrayList<>();
     String getvalue = "";
     String user = "noy";
+    DbHelper dbHelper;
+    String[] daftar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,11 +53,12 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        txt_hasil   = findViewById(R.id.txt_hasil);
-        lv = findViewById(R.id.list);
+        dbHelper = new DbHelper(this);
 
-        lv.setAdapter(new ArrayAdapter<String>(this,
-                android.R.layout.simple_list_item_1, data));
+        txt_hasil   = findViewById(R.id.txt_hasil);
+        //lv = findViewById(R.id.list);
+
+        //lv.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, data));
 
 
         fab = findViewById(R.id.fab);
@@ -87,6 +95,8 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(Intent.createChooser(email, "Choose an Email client :"));
             }
         });
+
+        getData();
     }
 
     // untuk mengosongi edittext
@@ -116,8 +126,9 @@ public class MainActivity extends AppCompatActivity {
                 ktg = txtKtg.getText().toString();
                 dsc = txtDesc.getText().toString();
 
-                txt_hasil.setText("Katagori : " + ktg + "\n" + "Keterangan : " + dsc);
-                data.add("Katagori : " + ktg + "\n" + "Keterangan : " +dsc);
+                //txt_hasil.setText("Katagori : " + ktg + "\n" + "Keterangan : " + dsc);
+                //data.add("Katagori : " + ktg + "\n" + "Keterangan : " +dsc);
+                addData();
                 dialog.dismiss();
             }
         });
@@ -132,6 +143,45 @@ public class MainActivity extends AppCompatActivity {
 
         dialog.show();
     }
+
+    public void addData(){
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        db.execSQL("insert into data( katagori, keterangan ) values ('" +
+                ktg+ "','"+
+                dsc+ "')");
+        Toast.makeText(getApplicationContext(), "Berhasil", Toast.LENGTH_SHORT).show();
+    }
+
+    public void getData(){
+        final SQLiteDatabase ReadData = dbHelper.getReadableDatabase();
+        @SuppressLint("Recycle") final Cursor cursor = ReadData.rawQuery("SELECT * FROM data order by id desc", null);
+        daftar = new String[cursor.getCount()];
+        cursor.moveToLast();
+
+        for (int count = 0; count < cursor.getCount();count++){
+            cursor.moveToPosition(count);
+            daftar[count] = (cursor.getString(1)+cursor.getString(2)+cursor.getString(3));
+        }
+
+        final ListView listView = findViewById(R.id.list);
+        ArrayAdapter adapter = new ArrayAdapter<>(this,android.R.layout.simple_list_item_1, daftar);
+        listView.setAdapter(adapter);
+        adapter.notifyDataSetChanged();
+
+
+
+        // listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        //     @Override
+        //    public void onItemClick(AdapterView arg0, View arg1, int arg2, long arg3) {
+        //        final String selection = daftar[arg2];
+        //        Intent intent = new Intent(getApplicationContext(), UpdateActivity.class);
+        //        intent.putExtra("id",selection);
+        //        startActivities(new Intent[]{intent});
+        //    }
+        // });
+
+    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

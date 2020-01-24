@@ -8,7 +8,7 @@ public class DbContract {
     public static final class Table implements BaseColumns {
         static String ID = "id";
         static String KATAGORI = "katagori";
-        static String DESC = "desc";
+        static String KETERANGAN = "keterangan";
         static String TGL = "tgl";
     }
 }
