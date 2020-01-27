@@ -7,28 +7,24 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.notur.dailyactivity.db.DbHelper;
-
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-
-import android.os.Parcelable;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.List;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.notur.dailyactivity.db.DataHelper;
+import com.notur.dailyactivity.db.DbHelper;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -39,12 +35,11 @@ public class MainActivity extends AppCompatActivity {
     TextView txt_hasil;
     String ktg, dsc;
     FloatingActionButton fab,fab2;
-    ListView lv;
-    List<String> data = new ArrayList<>();
-    String getvalue = "";
     String user = "noy";
     DbHelper dbHelper;
     String[] daftar;
+    DataHelper helper;
+    String log1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,11 +49,9 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         dbHelper = new DbHelper(this);
+        helper = new DataHelper(this);
 
         txt_hasil   = findViewById(R.id.txt_hasil);
-        //lv = findViewById(R.id.list);
-
-        //lv.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, data));
 
 
         fab = findViewById(R.id.fab);
@@ -66,45 +59,29 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //txt_hasil.setText(null);
                 DialogForm();
             }
         });
 
-        for (int i = 0; i < data.size(); i++) {
-            data.add((String)data.get(i));
-        }
-
-
-        Log.e("test", String.valueOf(data));
-
-        //final String finalGetvalue = getvalue;
         fab2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent email = new Intent(Intent.ACTION_SEND);
                 email.putExtra(Intent.EXTRA_EMAIL,new String[]{"ed@wikasita.co.id"});
-                email.putExtra(Intent.EXTRA_EMAIL, new String[]{"soetiyono@wikasita.co.id"});
-
                 email.putExtra(Intent.EXTRA_SUBJECT, "[Daily Activity]"+user);
-                email.putExtra(Intent.EXTRA_TEXT, "test...test");
+                email.putExtra(Intent.EXTRA_TEXT, log1);
 
                 //need this to prompts email client only
                 email.setType("message/rfc822");
-
                 startActivity(Intent.createChooser(email, "Choose an Email client :"));
             }
         });
 
         getData();
+        fileExport();
     }
 
-    // untuk mengosongi edittext
-    private void kosong(){
-        txtKtg.setText(null);
-        txtDesc.setText(null);
-    }
-
+    @SuppressLint("InflateParams")
     private void DialogForm() {
         dialog = new AlertDialog.Builder(MainActivity.this);
         inflater = getLayoutInflater();
@@ -112,12 +89,10 @@ public class MainActivity extends AppCompatActivity {
         dialog.setView(dialogView);
         dialog.setCancelable(true);
         dialog.setIcon(R.mipmap.ic_launcher);
-        dialog.setTitle("Form Biodata");
+        dialog.setTitle("Insert your Activity");
 
         txtKtg = dialogView.findViewById(R.id.txt_ktg);
         txtDesc = dialogView.findViewById(R.id.txt_desc);
-
-        //kosong();
 
         dialog.setPositiveButton("SUBMIT", new DialogInterface.OnClickListener() {
 
@@ -126,9 +101,9 @@ public class MainActivity extends AppCompatActivity {
                 ktg = txtKtg.getText().toString();
                 dsc = txtDesc.getText().toString();
 
-                //txt_hasil.setText("Katagori : " + ktg + "\n" + "Keterangan : " + dsc);
-                //data.add("Katagori : " + ktg + "\n" + "Keterangan : " +dsc);
                 addData();
+                finish();
+                startActivity(getIntent());
                 dialog.dismiss();
             }
         });
@@ -160,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
 
         for (int count = 0; count < cursor.getCount();count++){
             cursor.moveToPosition(count);
-            daftar[count] = (cursor.getString(1)+cursor.getString(2)+cursor.getString(3));
+            daftar[count] = (cursor.getString(1)+"\n"+cursor.getString(2)+"\n"+cursor.getString(3));
         }
 
         final ListView listView = findViewById(R.id.list);
@@ -168,17 +143,30 @@ public class MainActivity extends AppCompatActivity {
         listView.setAdapter(adapter);
         adapter.notifyDataSetChanged();
 
+        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
+                //helper.removeData(i+1);
+                Log.e("posisi", String.valueOf(i+1));
+                return true;
+            }
+        });
 
+    }
 
-        // listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-        //     @Override
-        //    public void onItemClick(AdapterView arg0, View arg1, int arg2, long arg3) {
-        //        final String selection = daftar[arg2];
-        //        Intent intent = new Intent(getApplicationContext(), UpdateActivity.class);
-        //        intent.putExtra("id",selection);
-        //        startActivities(new Intent[]{intent});
-        //    }
-        // });
+    private void fileExport() {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        @SuppressLint("Recycle") Cursor cursor = db.rawQuery("SELECT * FROM data WHERE id >= 1 AND id <= 10",null);
+        StringBuilder result = new StringBuilder();
+        String log = "store: "+result.toString();
+        Log.e("footbe", log);
+        while (cursor.moveToNext()){
+            result.append(cursor.getString(cursor.getColumnIndex("katagori"))).append(";").append(cursor.getString(cursor.getColumnIndex("keterangan"))).append("\r");
+            result.append("\n");
+        }
+
+        log1 = "store1: "+result.toString();
+        Log.e("footbe1", log1);
 
     }
 
