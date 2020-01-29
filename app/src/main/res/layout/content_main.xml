@@ -9,17 +9,28 @@
     tools:showIn="@layout/activity_main"
     android:orientation="vertical">
 
+    <TextView
+        android:id="@+id/textDate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        android:gravity="center"
+        android:textColor="#1976D2" />
+
+    <View
+        android:id="@+id/view"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:background="#0097A7" />
+
     <ListView
         android:id="@+id/list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-    <TextView
-        android:id="@+id/txt_hasil"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!"
-        android:textStyle="bold"
-        android:textSize="20dp"/>
+        android:layout_height="match_parent"
+        android:layout_marginTop="10dp" />
 
 </LinearLayout>
