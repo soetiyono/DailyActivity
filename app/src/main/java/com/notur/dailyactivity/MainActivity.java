@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
     AlertDialog.Builder dialog;
     LayoutInflater inflater;
     View dialogView;
-    EditText txtKtg, txtDesc;
+    EditText txtKtg, txtDesc, txtUser;
     TextView txt_date;
     String ktg, dsc;
     FloatingActionButton fab;
@@ -55,20 +55,19 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        // membuat akses database untuk di inisialisasi
         dbHelper = new DbHelper(this);
         helper = new DataHelper(this);
         helper.openDB();
 
         txt_date = findViewById(R.id.textDate);
 
-
+        // mengambil tanggal hari ini
         Date c = Calendar.getInstance().getTime();
         System.out.println("Current time => " + c);
-
         @SuppressLint("SimpleDateFormat")
         SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy");
         date = df.format(c);
-
         txt_date.setText(date);
 
         Log.e("waktu",date);
@@ -124,6 +123,7 @@ public class MainActivity extends AppCompatActivity {
         dialog.show();
     }
 
+    //menambahkan data pada database
     public void addData(){
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         db.execSQL("insert into data( katagori, keterangan, tgl ) values ('" +
@@ -133,6 +133,7 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(getApplicationContext(), "Berhasil", Toast.LENGTH_SHORT).show();
     }
 
+    //mengamil data dari database untuk ditampilkanb
     public void getData(){
         final SQLiteDatabase ReadData = dbHelper.getReadableDatabase();
         //@SuppressLint("Recycle") final Cursor cursor = ReadData.rawQuery("SELECT * FROM data order by id desc", null);
@@ -167,7 +168,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void fileExport() {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        @SuppressLint("Recycle") Cursor cursor = db.rawQuery("SELECT * FROM data WHERE id >= 1 AND id <= 10",null);
+        @SuppressLint("Recycle") Cursor cursor = db.rawQuery("SELECT katagori,keterangan,tgl FROM data WHERE tgl = '"+date+ "'",null);
         result = new StringBuilder();
         String log = "store: "+result.toString();
         Log.e("footbe", log);
@@ -199,14 +200,48 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            Intent email = new Intent(Intent.ACTION_SEND);
-            email.putExtra(Intent.EXTRA_EMAIL,new String[]{"ed@wikasita.co.id"});
-            email.putExtra(Intent.EXTRA_SUBJECT, "[Daily Activity]"+user+date);
-            email.putExtra(Intent.EXTRA_TEXT, result.toString());
 
-            //need this to prompts email client only
-            email.setType("message/rfc822");
-            startActivity(Intent.createChooser(email, "Choose an Email client :"));
+            dialog = new AlertDialog.Builder(MainActivity.this);
+            inflater = getLayoutInflater();
+            dialogView = inflater.inflate(R.layout.user, null);
+            dialog.setView(dialogView);
+            dialog.setCancelable(true);
+            dialog.setIcon(R.mipmap.ic_launcher);
+            dialog.setTitle("Insert your Activity");
+
+            txtUser = dialogView.findViewById(R.id.txt_user);
+
+            dialog.setPositiveButton("SUBMIT", new DialogInterface.OnClickListener() {
+
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                    String usr = txtUser.getText().toString();
+                    Intent email = new Intent(Intent.ACTION_SEND);
+                    email.putExtra(Intent.EXTRA_EMAIL,new String[]{"ed@wikasita.co.id"});
+                    email.putExtra(Intent.EXTRA_SUBJECT, "[Daily Activity]"+usr+date);
+                    email.putExtra(Intent.EXTRA_TEXT, result.toString());
+
+                    //need this to prompts email client only
+                    email.setType("message/rfc822");
+                    startActivity(Intent.createChooser(email, "Choose an Email client :"));
+
+                    startActivity(getIntent());
+                    dialog.dismiss();
+                }
+            });
+
+            dialog.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+
+            dialog.show();
+
+
             return true;
         }
 
